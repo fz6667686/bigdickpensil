@@ -1,5 +1,5 @@
 -- Крестики-нолики (Tic-Tac-Toe) с ботом для Matcha LuaVM
--- Использует UserInputService для обработки кликов
+-- Использует UserInputService с защитой от отсутствия Enum
 
 local UserInputService = game:GetService("UserInputService")
 
@@ -191,7 +191,27 @@ end
 -- Обработка кликов через UserInputService
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+
+    -- Определяем, является ли событие левым кликом мыши
+    local isLeftClick = false
+    if input.UserInputType then
+        if type(input.UserInputType) == "number" then
+            -- В Roblox MouseButton1 = 1
+            isLeftClick = (input.UserInputType == 1)
+        elseif type(input.UserInputType) == "userdata" then
+            -- Пытаемся получить имя или значение через pcall
+            local ok, name = pcall(function() return input.UserInputType.Name end)
+            if ok and name == "MouseButton1" then
+                isLeftClick = true
+            else
+                local ok2, val = pcall(function() return input.UserInputType.Value end)
+                if ok2 and val == 1 then
+                    isLeftClick = true
+                end
+            end
+        end
+    end
+    if not isLeftClick then return end
 
     local mousePos = UserInputService:GetMouseLocation()
     local mx = mousePos.X
@@ -248,7 +268,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 
     drawBoard()
 
-    -- Ход бота с задержкой (заменяем task.wait на wait)
+    -- Ход бота с задержкой (wait работает везде)
     wait(0.3)
     botMove()
 end)
