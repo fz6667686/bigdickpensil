@@ -1,8 +1,7 @@
 -- Крестики-нолики (Tic-Tac-Toe) с ботом для Matcha LuaVM
+-- Использует UserInputService для обработки кликов
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local mouse = player:GetMouse()
+local UserInputService = game:GetService("UserInputService")
 
 -- Игровое поле (3x3)
 local board = {
@@ -166,7 +165,6 @@ local function botMove()
     if gameOver then return end
     if currentPlayer ~= "O" then return end
 
-    -- Поиск пустой клетки
     for row = 1, 3 do
         for col = 1, 3 do
             if board[row][col] == "" then
@@ -190,12 +188,17 @@ local function botMove()
     end
 end
 
--- Обработка клика мыши
-mouse.Button1Down:Connect(function()
+-- Обработка кликов через UserInputService
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+
+    local mousePos = UserInputService:GetMouseLocation()
+    local mx = mousePos.X
+    local my = mousePos.Y
+
     if gameOver then
         -- Проверка клика по кнопке "Новая игра"
-        local mx = mouse.X
-        local my = mouse.Y
         local btnX = offsetX + 3 * cellSize / 2 - 70
         local btnY = offsetY + 3 * cellSize + 70
         if mx >= btnX and mx <= btnX + 140 and my >= btnY and my <= btnY + 40 then
@@ -216,8 +219,8 @@ mouse.Button1Down:Connect(function()
     if currentPlayer ~= "X" then return end
 
     -- Определение клетки по координатам мыши
-    local col = math.floor((mouse.X - offsetX) / cellSize) + 1
-    local row = math.floor((mouse.Y - offsetY) / cellSize) + 1
+    local col = math.floor((mx - offsetX) / cellSize) + 1
+    local row = math.floor((my - offsetY) / cellSize) + 1
 
     if row < 1 or row > 3 or col < 1 or col > 3 then
         return
@@ -245,8 +248,8 @@ mouse.Button1Down:Connect(function()
 
     drawBoard()
 
-    -- Ход бота с небольшой задержкой
-    task.wait(0.3)
+    -- Ход бота с задержкой (заменяем task.wait на wait)
+    wait(0.3)
     botMove()
 end)
 
